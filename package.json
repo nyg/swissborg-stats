@@ -21,5 +21,8 @@
   "bugs": {
     "url": "https://github.com/nyg/sb-account-statement/issues"
   },
-  "homepage": "https://github.com/nyg/sb-account-statement#readme"
+  "homepage": "https://github.com/nyg/sb-account-statement#readme",
+  "dependencies": {
+    "exceljs": "^4.2.0"
+  }
 }
