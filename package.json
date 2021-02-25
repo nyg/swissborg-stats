@@ -1,0 +1,25 @@
+{
+  "name": "sb-account-statement",
+  "version": "1.0.0",
+  "description": "Parse SwissBorg's account statement file",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/nyg/sb-account-statement.git"
+  },
+  "keywords": [
+    "swissborg",
+    "account",
+    "statement",
+    "excel"
+  ],
+  "author": "nyg",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/nyg/sb-account-statement/issues"
+  },
+  "homepage": "https://github.com/nyg/sb-account-statement#readme"
+}
