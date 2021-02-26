@@ -4,7 +4,7 @@
   "description": "Parse SwissBorg's account statement file",
   "main": "index.js",
   "scripts": {
-    "start": "node index.js",
+    "dev": "node dev.js",
     "test": "mocha"
   },
   "repository": {
