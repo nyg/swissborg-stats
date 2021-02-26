@@ -1,34 +1,36 @@
-const exceljs = require('exceljs')
+const ExcelJS = require('exceljs')
 
-const workbook = new exceljs.Workbook()
+exports.parse =  function(filename) {
+    return new ExcelJS.Workbook().xlsx.readFile(filename)
+}
 
-function getUserId(workbook) {
+exports.getUserId = function(workbook) {
     return workbook.worksheets[0].getRow(1).getCell(2).value
 }
 
-function getStartDate(workbook) {
-    return workbook.worksheets[0].getRow(2).getCell(2).value
+exports.getStartDate = function(workbook) {
+    return new Date(workbook.worksheets[0].getRow(2).getCell(2).value)
 }
 
-function getEndDate(workbook) {
-    return workbook.worksheets[0].getRow(3).getCell(2).value
+exports.getEndDate = function(workbook) {
+    return new Date(workbook.worksheets[0].getRow(3).getCell(2).value)
 }
 
-function getLocalCurrency(workbook) {
+exports.getLocalCurrency = function(workbook) {
     return workbook.worksheets[0].getRow(4).getCell(2).value
 }
 
-function getTimeZone(workbook) {
+exports.getTimeZone = function(workbook) {
     return workbook.worksheets[0].getRow(5).getCell(2).value
 }
 
-function getLedgerEntries(workbook) {
+exports.getLedgerEntries = function(workbook) {
 
-    var entries = []
+    let ledgerEntries = []
     workbook.worksheets[0].eachRow((row, rowNumber) => {
-        if (rowNumber > 8) { // TODO
-            entries.push({
-                time: row.getCell(2).value,
+        if (rowNumber > 9) {
+            ledgerEntries.push({
+                time: new Date(row.getCell(2).value + 'Z'),
                 type: row.getCell(3).value,
                 currency: row.getCell(4).value,
                 grossAmount: row.getCell(5).value,
@@ -39,15 +41,15 @@ function getLedgerEntries(workbook) {
         }
     })
 
-    return entries
+    return ledgerEntries
 }
 
-function getTrades(entries) {
+exports.getTrades = function(ledgerEntries) {
 
-    var trades = []
-    var currentTrade = undefined
+    let trades = []
+    let currentTrade;
 
-    for (var i = 0; i < entries.length; i++) {
+    for (var i = 0; i < ledgerEntries.length; i++) {
 
         /**
          * TODO The notion of asset pair (base and quote currencies) doesn't
@@ -59,29 +61,43 @@ function getTrades(entries) {
          * bought currency.
          */
 
-        if (entries[i].type == 'Sell') {
+        if (ledgerEntries[i].type == 'Sell') {
             currentTrade = {
-                time: entries[i].time,
-                sellCurrency: entries[i].currency,
-                cost: entries[i].grossAmount,
-                note: entries[i].note
+                time: ledgerEntries[i].time,
+                buyCurrency : undefined,
+                amount: undefined,
+                fee: undefined,
+                sellCurrency: ledgerEntries[i].currency,
+                cost: ledgerEntries[i].grossAmount,
+                note: ledgerEntries[i].note,
             }
         }
-        else if (entries[i].type == 'Buy') {
-            currentTrade.buyCurrency = entries[i].currency
-            currentTrade.grossAmount = entries[i].grossAmount
-            currentTrade.netAmount = entries[i].netAmount
-            currentTrade.fee = entries[i].fee
-            currentTrade.note += '. ' + entries[i].note
+        else if (ledgerEntries[i].type == 'Buy') {
+            currentTrade.buyCurrency = ledgerEntries[i].currency
+            currentTrade.amount = ledgerEntries[i].netAmount
+            currentTrade.fee = ledgerEntries[i].fee
+            currentTrade.note += '. ' + ledgerEntries[i].note
 
             trades.push(currentTrade)
-            currentTrade = undefined
+            currentTrade = null
         }
     }
 
     return trades
 }
 
-workbook.xlsx.readFile('account-statement.xlsx')
-    .then(r => getLedgerEntries(r))
-    .then(entries => console.log(getTrades(entries)))
+exports.getDeposits = function(ledgerEntries) {
+    return ledgerEntries.filter(entry => entry.type == 'Deposit')
+}
+
+exports.getWithdrawals = function(ledgerEntries) {
+    return ledgerEntries.filter(entry => entry.type == 'Withdrawal')
+}
+
+exports.getRewards = function(ledgerEntries) {
+    return ledgerEntries.filter(entry => entry.type == 'Earnings' && entry.note == '')
+}
+
+exports.getEarnings = function(ledgerEntries) {
+    return ledgerEntries.filter(entry => entry.type == 'Earnings' && entry.note == 'Yield earnings')
+}
