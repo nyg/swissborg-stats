@@ -34,27 +34,11 @@ describe('Account Statement Content', function() {
             })
         })
 
-        describe('#getStartDate()', function() {
-            it('should return a start date', function() {
-                sas.getStartDate(wb).should.deep.equal(new Date('2021-01-01T00:00:00Z'))
-            })
-        })
-
-        describe('#getEndDate()', function() {
-            it('should return an end date', function() {
-                sas.getEndDate(wb).should.deep.equal(new Date('2021-02-15T00:00:00Z'))
-            })
-        })
-
-        describe('#getLocalCurrency()', function() {
-            it('should return a currency', function() {
-                sas.getLocalCurrency(wb).should.equal('CHF')
-            })
-        })
-
-        describe('#getTimeZone()', function() {
-            it('should return a time zone', function() {
-                sas.getTimeZone(wb).should.equal('Europe/Zurich')
+        describe('#getDateRange()', function() {
+            it('should return a date range', function() {
+                let range = sas.getDateRange(wb)
+                range.start.should.deep.equal(new Date('2021-01-01T00:00:00Z'))
+                range.end.should.deep.equal(new Date('2021-02-15T00:00:00Z'))
             })
         })
     })

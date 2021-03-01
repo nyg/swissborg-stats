@@ -8,40 +8,43 @@ exports.getUserId = function(workbook) {
     return workbook.worksheets[0].getRow(1).getCell(2).value
 }
 
-exports.getStartDate = function(workbook) {
-    return new Date(workbook.worksheets[0].getRow(2).getCell(2).value)
-}
-
-exports.getEndDate = function(workbook) {
-    return new Date(workbook.worksheets[0].getRow(3).getCell(2).value)
-}
-
-exports.getLocalCurrency = function(workbook) {
-    return workbook.worksheets[0].getRow(4).getCell(2).value
-}
-
-exports.getTimeZone = function(workbook) {
-    return workbook.worksheets[0].getRow(5).getCell(2).value
+exports.getDateRange = function(workbook) {
+    return {
+        start: new Date(workbook.worksheets[0].getRow(2).getCell(2).value),
+        end: new Date(workbook.worksheets[0].getRow(3).getCell(2).value)
+    }
 }
 
 exports.getLedgerEntries = function(workbook) {
 
-    let ledgerEntries = []
+    let entries = []
+    let balances = {}
+
     workbook.worksheets[0].eachRow((row, rowNumber) => {
         if (rowNumber > 9) {
-            ledgerEntries.push({
+
+            let type = row.getCell(3).value
+            let currency = row.getCell(4).value
+            let netAmount = row.getCell(9).value
+            let decrease = type == 'Withdrawals' || type == 'Sell'
+
+            // compute the balance of each asset
+            balances[currency] = (balances[currency] ? balances[currency] : 0) + (decrease ? -netAmount : netAmount)
+
+            entries.push({
                 time: new Date(row.getCell(2).value + 'Z'),
-                type: row.getCell(3).value,
-                currency: row.getCell(4).value,
+                type: type,
+                currency: currency,
                 grossAmount: row.getCell(5).value,
                 fee: row.getCell(7).value,
-                netAmount: row.getCell(9).value,
+                netAmount: netAmount,
+                balance: balances[currency],
                 note: row.getCell(11).value
             })
         }
     })
 
-    return ledgerEntries
+    return entries
 }
 
 exports.getTrades = function(ledgerEntries) {
@@ -51,32 +54,31 @@ exports.getTrades = function(ledgerEntries) {
 
     for (var i = 0; i < ledgerEntries.length; i++) {
 
-        /**
-         * TODO The notion of asset pair (base and quote currencies) doesn't
-         * exist in SB's account statement, therefore we use commonly
-         * traded pairs.
-         *
-         * We also assume that a Sell always appear right before the
-         * corresponding Buy and that the fee is always paid in the
-         * bought currency.
+        /*
+         * We assume that a Sell always appear right before the corresponding
+         * Buy and that the fee is always paid in the bought currency.
          */
 
         if (ledgerEntries[i].type == 'Sell') {
             currentTrade = {
                 time: ledgerEntries[i].time,
-                buyCurrency : undefined,
-                amount: undefined,
-                fee: undefined,
-                sellCurrency: ledgerEntries[i].currency,
-                cost: ledgerEntries[i].grossAmount,
-                note: ledgerEntries[i].note,
+                buy: undefined,
+                sell: {
+                    currency: ledgerEntries[i].currency,
+                    amount: ledgerEntries[i].grossAmount,
+                    fee: 0,
+                    misc: ledgerEntries[i].note
+                }
             }
         }
         else if (ledgerEntries[i].type == 'Buy') {
-            currentTrade.buyCurrency = ledgerEntries[i].currency
-            currentTrade.amount = ledgerEntries[i].netAmount
-            currentTrade.fee = ledgerEntries[i].fee
-            currentTrade.note += '. ' + ledgerEntries[i].note
+
+            currentTrade.buy = {
+                currency: ledgerEntries[i].currency,
+                amount: ledgerEntries[i].netAmount,
+                fee: ledgerEntries[i].fee,
+                misc: ledgerEntries[i].note
+            }
 
             trades.push(currentTrade)
             currentTrade = null
@@ -95,9 +97,11 @@ exports.getWithdrawals = function(ledgerEntries) {
 }
 
 exports.getRewards = function(ledgerEntries) {
+    // exclude smart yield earnings
     return ledgerEntries.filter(entry => entry.type == 'Earnings' && entry.note == '')
 }
 
 exports.getEarnings = function(ledgerEntries) {
+    // only return smart yield earnings
     return ledgerEntries.filter(entry => entry.type == 'Earnings' && entry.note == 'Yield earnings')
 }
