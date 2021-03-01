@@ -1,5 +1,5 @@
 {
-  "name": "sb-account-statement",
+  "name": "swissborg-stats",
   "version": "1.0.0",
   "description": "Parse SwissBorg's account statement file",
   "main": "index.js",
@@ -9,7 +9,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/nyg/sb-account-statement.git"
+    "url": "git+https://github.com/nyg/swissborg-stats.git"
   },
   "keywords": [
     "swissborg",
@@ -20,9 +20,9 @@
   "author": "nyg",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/nyg/sb-account-statement/issues"
+    "url": "https://github.com/nyg/swissborg-stats/issues"
   },
-  "homepage": "https://github.com/nyg/sb-account-statement#readme",
+  "homepage": "https://github.com/nyg/swissborg-stats#readme",
   "dependencies": {
     "exceljs": "^4.2.0"
   },
